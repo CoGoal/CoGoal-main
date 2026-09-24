@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="011-create-message" author="dev">
+        <createTable tableName="message">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_message" nullable="false"/>
+            </column>
+            <column name="pact_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sender_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_message_pact"
+                                 baseTableName="message" baseColumnNames="pact_id"
+                                 referencedTableName="pact" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint constraintName="fk_message_sender"
+                                 baseTableName="message" baseColumnNames="sender_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <!-- Составной индекс под выборку ленты чата пакта по времени -->
+        <createIndex tableName="message" indexName="idx_message_pact_id_created_at">
+            <column name="pact_id"/>
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex tableName="message" indexName="idx_message_sender_id">
+            <column name="sender_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

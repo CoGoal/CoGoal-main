@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="014-create-review" author="dev">
+        <createTable tableName="review">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_review" nullable="false"/>
+            </column>
+            <column name="checkin_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reviewer_participant_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_review_check_in"
+                                 baseTableName="review" baseColumnNames="checkin_id"
+                                 referencedTableName="check_in" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint constraintName="fk_review_reviewer_participant"
+                                 baseTableName="review" baseColumnNames="reviewer_participant_id"
+                                 referencedTableName="pact_participant" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <!-- Один участник оценивает один чек-ин только один раз -->
+        <addUniqueConstraint constraintName="uq_review_checkin_reviewer"
+                             tableName="review" columnNames="checkin_id, reviewer_participant_id"/>
+
+        <createIndex tableName="review" indexName="idx_review_reviewer_participant_id">
+            <column name="reviewer_participant_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

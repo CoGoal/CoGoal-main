@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="013-create-proof" author="dev">
+        <createTable tableName="proof">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_proof" nullable="false"/>
+            </column>
+            <column name="checkin_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_url" type="VARCHAR(500)"/>
+            <column name="external_url" type="VARCHAR(500)"/>
+            <column name="description" type="TEXT"/>
+            <column name="uploaded_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_proof_check_in"
+                                 baseTableName="proof" baseColumnNames="checkin_id"
+                                 referencedTableName="check_in" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="proof" indexName="idx_proof_checkin_id">
+            <column name="checkin_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Доказательство должно содержать хотя бы файл или внешнюю ссылку -->
+    <changeSet id="013-proof-url-check" author="dev">
+        <sql>
+            ALTER TABLE proof
+                ADD CONSTRAINT chk_proof_has_url
+                CHECK (file_url IS NOT NULL OR external_url IS NOT NULL);
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE proof DROP CONSTRAINT chk_proof_has_url;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

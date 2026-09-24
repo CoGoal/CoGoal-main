@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="008-create-milestone" author="dev">
+        <createTable tableName="milestone">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_milestone" nullable="false"/>
+            </column>
+            <column name="goal_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="deadline" type="TIMESTAMP"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_milestone_goal"
+                                 baseTableName="milestone" baseColumnNames="goal_id"
+                                 referencedTableName="goal" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="milestone" indexName="idx_milestone_goal_id">
+            <column name="goal_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

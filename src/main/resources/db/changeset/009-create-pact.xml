@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="009-create-pact" author="dev">
+        <createTable tableName="pact">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_pact" nullable="false"/>
+            </column>
+            <column name="goal_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="charity_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_pact_goal"
+                                 baseTableName="pact" baseColumnNames="goal_id"
+                                 referencedTableName="goal" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint constraintName="fk_pact_charity"
+                                 baseTableName="pact" baseColumnNames="charity_id"
+                                 referencedTableName="charity" referencedColumnNames="id"
+                                 onDelete="RESTRICT"/>
+
+        <createIndex tableName="pact" indexName="idx_pact_goal_id">
+            <column name="goal_id"/>
+        </createIndex>
+        <createIndex tableName="pact" indexName="idx_pact_charity_id">
+            <column name="charity_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
