@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: CoGoal-main
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cg-test}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schema is owned by Liquibase; Hibernate only checks that entities match it
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # Columns are TIMESTAMP without time zone: Instant fields map to them and are stored in UTC
+        jdbc:
+          time_zone: UTC
+        type:
+          preferred_instant_jdbc_type: TIMESTAMP
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/db.changelog-master.xml
+
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+        # {"content": [...], "page": {"size", "number", "totalElements", "totalPages"}} instead of PageImpl JSON
+        serialization-mode: via-dto
+
+  servlet:
+    multipart:
+      max-file-size: ${app.storage.max-file-size}
+      # Whole multipart request: the file plus the other fields of a proof; keep it above max-file-size
+      max-request-size: ${APP_STORAGE_MAX_REQUEST_SIZE:12MB}
+
+app:
+  coins:
+    goal-completed: ${APP_COINS_GOAL_COMPLETED:100}
+  deadlines:
+    enabled: ${APP_DEADLINES_ENABLED:true}
+    check-interval: ${APP_DEADLINES_CHECK_INTERVAL:5m}
+    reminder-before: ${APP_DEADLINES_REMINDER_BEFORE:24h}
+    payment-retry-interval: ${APP_DEADLINES_PAYMENT_RETRY_INTERVAL:1h}
+  storage:
+    path: ${APP_STORAGE_PATH:./data/proofs}
+    max-file-size: ${APP_STORAGE_MAX_FILE_SIZE:10MB}
+  internal:
+    # Shared secret of auth-service / payment-service for /internal/** (X-Internal-Token header)
+    token: ${INTERNAL_TOKEN}
+
+# Bearer token validation (tokens are issued by the auth service, signed with HS256)
+security:
+  jwt:
+    secret: ${JWT_SECRET:}
+    issuer: ${JWT_ISSUER:pact-auth}
+    audience: ${JWT_AUDIENCE:pact-main}
+    clock-skew: 30s
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

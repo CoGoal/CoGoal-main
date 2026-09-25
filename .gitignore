@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local proof file storage (app.storage.path) ###
+/data/

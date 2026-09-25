@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <!-- Учётные данные живут в auth-service; id пользователя приходит оттуда же (sub в JWT) -->
+    <changeSet id="015-users-drop-credentials" author="dev">
+        <dropColumn tableName="users" columnName="password_hash"/>
+        <dropColumn tableName="users" columnName="failed_login_attempts"/>
+        <dropColumn tableName="users" columnName="locked_until"/>
+        <rollback>
+            <addColumn tableName="users">
+                <column name="password_hash" type="VARCHAR(255)"/>
+                <column name="failed_login_attempts" type="INT" defaultValueNumeric="0">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="locked_until" type="TIMESTAMP"/>
+            </addColumn>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="015-users-id-without-default" author="dev">
+        <dropDefaultValue tableName="users" columnName="id" columnDataType="UUID"/>
+        <rollback>
+            <addDefaultValue tableName="users" columnName="id" columnDataType="UUID"
+                             defaultValueComputed="gen_random_uuid()"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

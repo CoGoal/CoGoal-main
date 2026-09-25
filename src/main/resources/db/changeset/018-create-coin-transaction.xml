@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="018-create-coin-transaction" author="dev">
+        <createTable tableName="coin_transaction">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_coin_transaction" nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Положительное — начисление, отрицательное — списание -->
+            <column name="amount" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reference_id" type="UUID"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_coin_transaction_user"
+                                 baseTableName="coin_transaction" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <!-- Под выборку истории пользователя по времени -->
+        <createIndex tableName="coin_transaction" indexName="idx_coin_transaction_user_id_created_at">
+            <column name="user_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <!-- Идемпотентность: не больше одной операции на один объект-основание
+             (строки с NULL в reference_id в PostgreSQL между собой не конфликтуют) -->
+        <addUniqueConstraint constraintName="uq_coin_transaction_reason_reference"
+                             tableName="coin_transaction" columnNames="reason, reference_id"/>
+    </changeSet>
+</databaseChangeLog>

@@ -25,6 +25,8 @@ public class SecurityConfig {
             "/error"
     };
 
+    private static final String ADMIN_ENDPOINTS = "/api/v1/admin/**";
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    JwtTokenService jwtTokenService,
@@ -38,6 +40,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)

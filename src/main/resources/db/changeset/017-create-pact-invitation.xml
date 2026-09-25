@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <changeSet id="017-create-pact-invitation" author="dev">
+        <createTable tableName="pact_invitation">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_pact_invitation" nullable="false"/>
+            </column>
+            <column name="pact_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inviter_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="invitee_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="responded_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_pact_invitation_pact"
+                                 baseTableName="pact_invitation" baseColumnNames="pact_id"
+                                 referencedTableName="pact" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint constraintName="fk_pact_invitation_inviter"
+                                 baseTableName="pact_invitation" baseColumnNames="inviter_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+        <addForeignKeyConstraint constraintName="fk_pact_invitation_invitee"
+                                 baseTableName="pact_invitation" baseColumnNames="invitee_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
+
+        <createIndex tableName="pact_invitation" indexName="idx_pact_invitation_pact_id">
+            <column name="pact_id"/>
+        </createIndex>
+        <createIndex tableName="pact_invitation" indexName="idx_pact_invitation_inviter_id">
+            <column name="inviter_id"/>
+        </createIndex>
+        <createIndex tableName="pact_invitation" indexName="idx_pact_invitation_invitee_id">
+            <column name="invitee_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Не больше одного ожидающего приглашения в пакт для одного пользователя -->
+    <changeSet id="017-pact-invitation-pending-unique" author="dev">
+        <sql>
+            CREATE UNIQUE INDEX uq_pact_invitation_pending
+                ON pact_invitation (pact_id, invitee_id)
+                WHERE status = 'PENDING';
+        </sql>
+        <rollback>
+            <sql>DROP INDEX uq_pact_invitation_pending;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

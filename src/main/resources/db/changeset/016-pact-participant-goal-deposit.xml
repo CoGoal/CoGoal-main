@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+    <!-- У каждого участника пакта своя цель и свой залог -->
+    <changeSet id="016-pact-participant-goal-deposit" author="dev">
+        <addColumn tableName="pact_participant">
+            <column name="goal_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deposit_amount" type="DECIMAL(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deposit_currency" type="VARCHAR(3)" defaultValue="RUB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deposit_status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Когда отправлено напоминание о финальном дедлайне цели (защита от повторной отправки) -->
+            <column name="reminder_sent_at" type="TIMESTAMP"/>
+        </addColumn>
+
+        <addForeignKeyConstraint constraintName="fk_pact_participant_goal"
+                                 baseTableName="pact_participant" baseColumnNames="goal_id"
+                                 referencedTableName="goal" referencedColumnNames="id"
+                                 onDelete="RESTRICT"/>
+
+        <createIndex tableName="pact_participant" indexName="idx_pact_participant_goal_id">
+            <column name="goal_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Одна цель — один пакт. Вышедшие (LEFT) не учитываются: их цель возвращается в DRAFT
+         и может уйти в другой пакт -->
+    <changeSet id="016-pact-participant-goal-unique" author="dev">
+        <sql>
+            CREATE UNIQUE INDEX uq_pact_participant_goal_active
+                ON pact_participant (goal_id)
+                WHERE status &lt;&gt; 'LEFT';
+        </sql>
+        <rollback>
+            <sql>DROP INDEX uq_pact_participant_goal_active;</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
